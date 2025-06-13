@@ -75,15 +75,19 @@ const updateProject = async (req, res) => {
       throw new ApiError(401, "All fileds are required");
     }
 
-    const project = await Project.findByIdAndUpdate(
-      projectId,
-      { name, description },
-      { new: true },
-    );
+    const project = await Project.findOne({
+      createdBy: req.user._id,
+      _id: projectId,
+    });
 
     if (!project) {
-      throw new ApiError(404, "Project not found for updating");
+      throw new ApiError(403, "Uesr cannot delete this project");
     }
+
+    project.name = name;
+    project.description = description;
+
+    await project.save();
 
     return res
       .status(201)
@@ -101,7 +105,10 @@ const deleteProject = async (req, res) => {
       throw new ApiError(401, "Project id required");
     }
 
-    const project = await Project.findOne({ createdBy: req.user._id });
+    const project = await Project.findOne({
+      createdBy: req.user._id,
+      _id: projectId,
+    });
 
     if (!project) {
       throw new ApiError(403, "Uesr cannot delete this project");
