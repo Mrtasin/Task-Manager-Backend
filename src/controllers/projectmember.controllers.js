@@ -8,36 +8,10 @@ import { UserRoleEnum } from "../utils/constants.js";
 
 const addMemberToProject = async (req, res) => {
   try {
-    const { projectId } = req.params;
-
-    if (!projectId) {
-      throw new ApiError(400, "Project id is required");
-    }
-
     const email = req.body?.email;
 
     if (!email) {
       throw new ApiError(400, "Member is required");
-    }
-
-    const project = await Project.findOne({
-      _id: projectId,
-      createdBy: req.user._id,
-    });
-
-    if (!project) {
-      const member = await ProjectMember.findOne({
-        user: req.user._id,
-        project: projectId,
-        $or: [
-          { role: UserRoleEnum.PROJECT_ADMIN },
-          { role: UserRoleEnum.ADMIN },
-        ],
-      });
-
-      if (!member) {
-        throw new ApiError(401, "You cannot add member to project");
-      }
     }
 
     const member = await User.findOne({ email });
@@ -54,7 +28,9 @@ const addMemberToProject = async (req, res) => {
 
     const newProjectMember = await ProjectMember.create({
       user: member._id,
-      project: project._id,
+      project:
+        new mongoose.Types.ObjectId(req.project._id) ||
+        new mongoose.Types.ObjectId(req.member.project),
     });
 
     if (!newProjectMember) {
@@ -99,31 +75,9 @@ const getProjectMembers = async (req, res) => {
 
 const updateProjectMember = async (req, res) => {
   try {
-    const { projectId } = req.params;
-
-    if (!projectId) {
-      throw new ApiError(403, "Project Id invalid");
-    }
-
-    const project = await Project.findOne({
-      _id: projectId,
-      createdBy: req.user._id,
-    });
-
-    if (!project) {
-      const member = await ProjectMember.findOne({
-        user: req.user._id,
-        project: projectId,
-        $or: [
-          { role: UserRoleEnum.PROJECT_ADMIN },
-          { role: UserRoleEnum.ADMIN },
-        ],
-      });
-
-      if (!member) {
-        throw new ApiError(401, "You cannot add member to project");
-      }
-    }
+    const projectId =
+      new mongoose.Types.ObjectId(req.project._id) ||
+      new mongoose.Types.ObjectId(req.member.project);
 
     const { oldMember, newMember } = req.body;
 
@@ -137,15 +91,13 @@ const updateProjectMember = async (req, res) => {
       throw new ApiError(401, "Error invalid user");
     }
 
-    const members = await ProjectMember.find({ project: projectId }).populate(
-      "user",
-      "email username fullname",
-    );
+    const members = await ProjectMember.find({
+      project: projectId,
+    }).populate("user", "email username fullname");
 
     if (!members) {
       throw new ApiError(404, "Not found members in the project");
     }
-
 
     const existMember = members.filter((user) => user.user.email === oldMember);
 
@@ -153,28 +105,24 @@ const updateProjectMember = async (req, res) => {
       throw new ApiError(404, "This member not found in the project");
     }
 
-
     const isNewMember = await User.findOne({ email: newMember });
 
     if (!isNewMember) {
       throw new ApiError(401, "Error invalid new user");
     }
 
-    const existNewMember = await ProjectMember.findOne({
-      user: isNewMember._id,
-      project: projectId,
-    });
+    const existNewMember = members.filter(
+      (user) => user.user.email === newMember,
+    );
 
     if (existNewMember) {
       throw new ApiError(403, "Member already exist in the project");
     }
-    
 
     const deletedOldMember = await ProjectMember.deleteOne({
       user: isOldMember._id,
       project: projectId,
     });
-    
 
     if (!deletedOldMember) {
       throw new ApiError(400, "Member deleting failed");
@@ -194,9 +142,6 @@ const updateProjectMember = async (req, res) => {
       .json(
         new ApiResponse(200, addMember, "Update project member successfully"),
       );
-
-
-
   } catch (error) {
     throw new ApiError(
       500,
@@ -207,31 +152,9 @@ const updateProjectMember = async (req, res) => {
 
 const updateMemberRole = async (req, res) => {
   try {
-    const { projectId } = req.params;
-
-    if (!projectId) {
-      throw new ApiError(403, "Project Id invalid");
-    }
-
-    const project = await Project.findOne({
-      _id: projectId,
-      createdBy: req.user._id,
-    });
-
-    if (!project) {
-      const member = await ProjectMember.findOne({
-        user: req.user._id,
-        project: projectId,
-        $or: [
-          { role: UserRoleEnum.PROJECT_ADMIN },
-          { role: UserRoleEnum.ADMIN },
-        ],
-      });
-
-      if (!member) {
-        throw new ApiError(401, "You cannot add member to project");
-      }
-    }
+    const projectId =
+      new mongoose.Types.ObjectId(req.project._id) ||
+      new mongoose.Types.ObjectId(req.member.project);
 
     const { email, role } = req.body;
 
@@ -277,36 +200,14 @@ const updateMemberRole = async (req, res) => {
 
 const deleteMember = async (req, res) => {
   try {
-    const { projectId } = req.params;
-
-    if (!projectId) {
-      throw new ApiError(403, "Project Id invalid");
-    }
+    const projectId =
+      new mongoose.Types.ObjectId(req.project._id) ||
+      new mongoose.Types.ObjectId(req.member.project);
 
     const { email } = req.body;
 
     if (!email) {
       throw new ApiError(401, "Email is required");
-    }
-
-    const project = await Project.findOne({
-      _id: projectId,
-      createdBy: req.user._id,
-    });
-
-    if (!project) {
-      const member = await ProjectMember.findOne({
-        user: req.user._id,
-        project: projectId,
-        $or: [
-          { role: UserRoleEnum.PROJECT_ADMIN },
-          { role: UserRoleEnum.ADMIN },
-        ],
-      });
-
-      if (!member) {
-        throw new ApiError(401, "You cannot add member to project");
-      }
     }
 
     const findMember = await User.findOne({ email });
