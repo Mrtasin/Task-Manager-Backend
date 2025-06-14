@@ -24,6 +24,6 @@ app.use(cookieParser());
 app.use("/api/v1/healthcheck", healthCheckRouter);
 app.use("/api/v1/users", authRouter);
 app.use("/api/v1/projects", projectRouter);
-app.use("/api/v1/project-members", projectMemberRouter);
+app.use("/api/v1/members", projectMemberRouter);
 
 export default app;

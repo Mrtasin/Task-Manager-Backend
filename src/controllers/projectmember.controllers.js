@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { User } from "../models/auth.models.js";
 import { Project } from "../models/project.models.js";
 import { ProjectMember } from "../models/projectmember.models.js";
@@ -136,21 +137,22 @@ const updateProjectMember = async (req, res) => {
       throw new ApiError(401, "Error invalid user");
     }
 
-    const members = await ProjectMember.find({ project: projectId });
+    const members = await ProjectMember.find({ project: projectId }).populate(
+      "user",
+      "email username fullname",
+    );
 
     if (!members) {
       throw new ApiError(404, "Not found members in the project");
     }
 
-    console.log(members);
 
-    const existMember = members.filter((user) => user.email === oldMember);
+    const existMember = members.filter((user) => user.user.email === oldMember);
 
     if (!existMember) {
       throw new ApiError(404, "This member not found in the project");
     }
 
-    console.log(`existMember :- ${existMember}`);
 
     const isNewMember = await User.findOne({ email: newMember });
 
@@ -163,15 +165,18 @@ const updateProjectMember = async (req, res) => {
       project: projectId,
     });
 
-    if (!existNewMember) {
+    if (existNewMember) {
       throw new ApiError(403, "Member already exist in the project");
     }
+    
 
-    const deletedMember = await ProjectMember.deleteOne({
-      user: oldMember._id,
+    const deletedOldMember = await ProjectMember.deleteOne({
+      user: isOldMember._id,
+      project: projectId,
     });
+    
 
-    if (!deletedMember) {
+    if (!deletedOldMember) {
       throw new ApiError(400, "Member deleting failed");
     }
 
@@ -185,10 +190,13 @@ const updateProjectMember = async (req, res) => {
     }
 
     return res
-      .status(201)
+      .status(200)
       .json(
-        new ApiResponse(201, addMember, "Update project member successfully"),
+        new ApiResponse(200, addMember, "Update project member successfully"),
       );
+
+
+
   } catch (error) {
     throw new ApiError(
       500,
