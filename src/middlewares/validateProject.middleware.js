@@ -1,6 +1,6 @@
-import { Project } from "../models/project.models";
-import { ProjectMember } from "../models/projectmember.models";
-import { ApiError } from "../utils/api-error";
+import { Project } from "../models/project.models.js";
+import { ProjectMember } from "../models/projectmember.models.js";
+import { ApiError } from "../utils/api-error.js";
 
 const validateProjectIdAndRole = async (req, res, next) => {
   try {

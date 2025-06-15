@@ -1,7 +1,14 @@
 import { Router } from "express";
-import {} from "../controllers/task.controllers.js";
-import isLoggedIn from "../middlewares/auth.middlewares";
-import { validateProjectIdAndRole } from "../middlewares/validateProject.middleware";
+import {
+  createTask,
+  deleteTask,
+  getTaskById,
+  getTasks,
+  updateTask,
+  updateTaskStatus,
+} from "../controllers/task.controllers.js";
+import isLoggedIn from "../middlewares/auth.middlewares.js";
+import { validateProjectIdAndRole } from "../middlewares/validateProject.middleware.js";
 
 const router = Router();
 
