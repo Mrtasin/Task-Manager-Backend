@@ -4,6 +4,7 @@ import { Task } from "../models/task.models.js";
 import mongoose from "mongoose";
 import { ProjectMember } from "../models/projectmember.models.js";
 import { UserRoleEnum } from "../utils/constants.js";
+import { User } from "../models/auth.models.js";
 
 const createTask = async (req, res) => {
   try {
@@ -16,6 +17,9 @@ const createTask = async (req, res) => {
     const projectId =
       new mongoose.Types.ObjectId(req.project._id) ||
       new mongoose.Types.ObjectId(req.member.project);
+
+      console.log(projectId);
+      
 
     const isAssignedTo = await User.findOne({ email: assignedTo });
 
