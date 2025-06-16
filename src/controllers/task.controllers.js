@@ -18,8 +18,7 @@ const createTask = async (req, res) => {
       new mongoose.Types.ObjectId(req.project._id) ||
       new mongoose.Types.ObjectId(req.member.project);
 
-      console.log(projectId);
-      
+    console.log(projectId);
 
     const isAssignedTo = await User.findOne({ email: assignedTo });
 
