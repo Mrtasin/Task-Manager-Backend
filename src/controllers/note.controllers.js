@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
-import { Note } from "../models/note.models";
+import { Note } from "../models/note.models.js";
 import { Project } from "../models/project.models.js";
 import { ApiError } from "../utils/api-error.js";
-import { ApiResponse } from "../utils/Api-response";
+import { ApiResponse } from "../utils/Api-response.js";
 
 const getNotes = async (req, res) => {
   try {

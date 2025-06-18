@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { Project } from "../models/project.models.js";
 import { ProjectMember } from "../models/projectmember.models.js";
 import { ApiError } from "../utils/api-error.js";
@@ -39,4 +40,35 @@ const validateProjectIdAndRole = async (req, res, next) => {
   }
 };
 
-export { validateProjectIdAndRole };
+const validateProjectMember = (role = []) => 
+  async (req, res, next) => {
+    try {
+      const { projectId } = req.params;
+
+      if (!projectId) {
+        throw new ApiError(403, "Project Id invalid");
+      }
+
+      const member = await ProjectMember.findOne({
+        user: new mongoose.Types.ObjectId(req.user._id),
+        project: new mongoose.Types.ObjectId(projectId),
+        role: { $in: role },
+      });
+
+      if (!member) {
+        throw new ApiError(401, "You cannot perform this action");
+      }
+
+      req.member = member;
+
+      next();
+    } catch (error) {
+      throw new ApiError(
+        500,
+        error?.message || "Error validating project id and role",
+      );
+    }
+  };
+
+
+export { validateProjectIdAndRole, validateProjectMember };
